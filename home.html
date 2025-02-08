@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Smart Environmental Monitoring - Home</title>
+  <link href="bc-stylesheet.css" rel="stylesheet" type="text/css">
+  <style>
+    /* Layout and typography */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+    }
+    #container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    #header {
+      background-color: #333;
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+    }
+    #header ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      text-align: center;
+    }
+    #header ul li {
+      display: inline;
+      margin: 0 15px;
+    }
+    #header ul li a {
+      color: #fff;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    #content {
+      display: flex;
+      margin-top: 20px;
+    }
+    #main {
+      flex: 3;
+      padding: 20px;
+    }
+    #sidebar {
+      flex: 1;
+      padding: 20px;
+      background-color: #eee;
+      margin-left: 20px;
+    }
+    #footer {
+      background-color: #101d08d7;
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+      margin-top: 20px;
+    }
+    /* Graph container styling */
+    .graph-container {
+      margin-bottom: 30px; /* small gap between graphs */
+    }
+    canvas {
+      max-width: 100% !important;
+      width: 800px;
+      display: block;
+      margin: 0 auto;
+    }
+    /* Sidebar value boxes */
+    .value-box {
+      background-color: #62e04993;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .value-box h3 {
+      margin: 0;
+      font-size: 18px;
+      color: #333;
+    }
+    .value-box p {
+      margin: 5px 0 0;
+      font-size: 16px;
+      color: #032e0c;
+    }
+  </style>
+  <!-- Chart.js Library -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div id="container">
+    <!-- Header with navigation links -->
+    <div id="header">
+      <ul>
+        <li><a href="html5-home.html" class="on">Home</a></li>
+        <li><a href="Mcurd.html">Ammonia</a></li>
+        <li><a href="Gcurd.html">Rainfall</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+      <h1>Smart Environmental Monitoring</h1>
+    </div>
+    
+    <!-- Content area -->
+    <div id="content">
+      <!-- Main content with graphs -->
+      <div id="main">
+        <h2>Welcome</h2>
+        <p>
+          This system monitors real-time rainfall and ammonia gas levels using IoT sensors.
+          The graphs below show the historical trends for each sensor.
+        </p>
+        
+        <!-- Rainfall Graph -->
+        <div class="graph-container">
+          <h3>Rainfall Level (cm)</h3>
+          <canvas id="rainfallChart"></canvas>
+        </div>
+        
+        <!-- Ammonia Graph -->
+        <div class="graph-container">
+          <h3>Ammonia Gas Level (ppm)</h3>
+          <canvas id="ammoniaChart"></canvas>
+        </div>
+      </div>
+      
+      <!-- Sidebar with latest values -->
+      <div id="sidebar">
+        <h2>Latest Sensor Readings</h2>
+        <div class="value-box">
+          <h3>Rainfall Amount</h3>
+          <p id="latestRainfall">Loading...</p>
+        </div>
+        <div class="value-box">
+          <h3>Ammonia Gas Amount</h3>
+          <p id="latestAmmonia">Loading...</p>
+        </div>
+      </div>
+    </div>
+    
+    <div id="footer">
+      <p>&copy; 2025 Smart Environmental Monitoring. All Rights Reserved.</p>
+    </div>
+  </div>
+  
+  <script>
+    // Generic function to fetch sensor data by sensor type ('G' for Rainfall, 'M' for Ammonia)
+    async function fetchSensorData(sensor) {
+      try {
+        const response = await fetch('/data?sensor=' + sensor);
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error('Error fetching sensor data:', error);
+        return [];
+      }
+    }
+
+    // Render Rainfall Chart (sensor=G)
+    async function renderRainfallChart() {
+      const records = await fetchSensorData('G');
+      // Sort records by Gdate in ascending order
+      records.sort((a, b) => new Date(a.Gdate) - new Date(b.Gdate));
+      const labels = records.map(record => record.Gdate);
+      const dataPoints = records.map(record => record.Gvalue);
+      const ctx = document.getElementById('rainfallChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Rainfall Level (cm)',
+            data: dataPoints,
+            fill: false,
+            borderColor: 'blue',
+            tension: 0.1
+          }]
+        },
+        options: {
+          scales: {
+            x: { title: { display: true, text: 'Date & Time' } },
+            y: { title: { display: true, text: 'Rainfall Level (cm)' } }
+          }
+        }
+      });
+    }
+
+    // Render Ammonia Chart (sensor=M)
+    async function renderAmmoniaChart() {
+      const records = await fetchSensorData('M');
+      // Sort records by Mdate in ascending order
+      records.sort((a, b) => new Date(a.Mdate) - new Date(b.Mdate));
+      const labels = records.map(record => record.Mdate);
+      const dataPoints = records.map(record => record.Mvalue);
+      const ctx = document.getElementById('ammoniaChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Ammonia Gas Level (ppm)',
+            data: dataPoints,
+            fill: false,
+            borderColor: 'red',
+            tension: 0.1
+          }]
+        },
+        options: {
+          scales: {
+            x: { title: { display: true, text: 'Date & Time' } },
+            y: { title: { display: true, text: 'Ammonia Gas Level (ppm)' } }
+          }
+        }
+      });
+    }
+
+    // Fetch the latest sensor reading for a given sensor type
+    async function fetchLatestSensor(sensor) {
+      const records = await fetchSensorData(sensor);
+      if (records.length > 0) {
+        // For sensor G, sort by Gdate descending; for sensor M, sort by Mdate descending
+        if (sensor === 'G') {
+          records.sort((a, b) => new Date(b.Gdate) - new Date(a.Gdate));
+          return records[0];
+        } else if (sensor === 'M') {
+          records.sort((a, b) => new Date(b.Mdate) - new Date(a.Mdate));
+          return records[0];
+        }
+      }
+      return null;
+    }
+
+    // Update sidebar with the latest sensor readings
+    async function updateLatestValues() {
+      const latestRainfall = await fetchLatestSensor('G');
+      const latestAmmonia = await fetchLatestSensor('M');
+      if (latestRainfall) {
+        document.getElementById('latestRainfall').innerText = latestRainfall.Gvalue + " cm";
+      } else {
+        document.getElementById('latestRainfall').innerText = "No Data";
+      }
+      if (latestAmmonia) {
+        document.getElementById('latestAmmonia').innerText = latestAmmonia.Mvalue + " ppm";
+      } else {
+        document.getElementById('latestAmmonia').innerText = "No Data";
+      }
+    }
+
+    // When the page loads, render both charts and update the latest sensor values
+    window.onload = function() {
+      renderRainfallChart();
+      renderAmmoniaChart();
+      updateLatestValues();
+    };
+  </script>
+</body>
+</html>

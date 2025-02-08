@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Rainfall Level Graph (Garbage Data)</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    canvas { display: block; margin: 20px auto; }
+  </style>
+</head>
+<body>
+  <h1>Rainfall Level Graph (Sensor: G - Garbage Data)</h1>
+  <canvas id="graphChart" width="800" height="400"></canvas>
+  <script>
+    async function fetchData() {
+      const response = await fetch('/data?sensor=G');
+      return await response.json();
+    }
+    async function renderChart() {
+      const records = await fetchData();
+      // Sort records by Gdate (ascending)
+      records.sort((a, b) => new Date(a.Gdate) - new Date(b.Gdate));
+      const labels = records.map(record => record.Gdate);
+      const dataPoints = records.map(record => record.Gvalue);
+      const ctx = document.getElementById('graphChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Rainfall Level (cm)',
+            data: dataPoints,
+            fill: false,
+            borderColor: 'blue',
+            tension: 0.1
+          }]
+        },
+        options: {
+          scales: {
+            x: { title: { display: true, text: 'Date & Time' } },
+            y: { title: { display: true, text: 'Rainfall Level (cm)' } }
+          }
+        }
+      });
+    }
+    renderChart();
+  </script>
+</body>
+</html>

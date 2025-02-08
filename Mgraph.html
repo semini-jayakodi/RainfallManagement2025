@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ammonia Gas Level Graph (Methane Data)</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    canvas { display: block; margin: 20px auto; }
+  </style>
+</head>
+<body>
+  <h1>Ammonia Gas Level Graph (Sensor: M - Methane Data)</h1>
+  <canvas id="graphChart" width="800" height="400"></canvas>
+  <script>
+    async function fetchData() {
+      const response = await fetch('/data?sensor=M');
+      return await response.json();
+    }
+    async function renderChart() {
+      const records = await fetchData();
+      // Sort records by Mdate (ascending)
+      records.sort((a, b) => new Date(a.Mdate) - new Date(b.Mdate));
+      const labels = records.map(record => record.Mdate);
+      const dataPoints = records.map(record => record.Mvalue);
+      const ctx = document.getElementById('graphChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Ammonia Gas Level (ppm)',
+            data: dataPoints,
+            fill: false,
+            borderColor: 'red',
+            tension: 0.1
+          }]
+        },
+        options: {
+          scales: {
+            x: { title: { display: true, text: 'Date & Time' } },
+            y: { title: { display: true, text: 'Ammonia Gas Level (ppm)' } }
+          }
+        }
+      });
+    }
+    renderChart();
+  </script>
+</body>
+</html>
